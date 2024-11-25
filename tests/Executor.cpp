@@ -1,21 +1,19 @@
 #include <gtest/gtest.h>
 #include "Executor.h"
 
+// 测试未初始化时的默认位置
 TEST(ExecutorTest, should_return_default_pose_when_without_init_and_command) {
     // given
     std::unique_ptr<Executor> executor(Executor::NewExecutor());
 
     // when
-    int32_t x, y;
-    char heading;
-    executor->getPosition(x, y, heading);
-
+    Pose target = {0, 0, 'N'};  // 默认值
+    
     // then
-    ASSERT_EQ(x, 0);
-    ASSERT_EQ(y, 0);
-    ASSERT_EQ(heading, 'N');
+    ASSERT_EQ(target, executor->Query());
 }
 
+// 测试执行'M'指令
 TEST(ExecutorTest, should_move_forward_when_execute_M_command) {
     // given
     std::unique_ptr<Executor> executor(Executor::NewExecutor());
@@ -25,14 +23,11 @@ TEST(ExecutorTest, should_move_forward_when_execute_M_command) {
     executor->executeCommands("M");
 
     // then
-    int32_t x, y;
-    char heading;
-    executor->getPosition(x, y, heading);
-    ASSERT_EQ(x, 0);
-    ASSERT_EQ(y, 1);
-    ASSERT_EQ(heading, 'N');
+    Pose target = {0, 1, 'N'};
+    ASSERT_EQ(target, executor->Query());
 }
 
+// 测试执行'L'指令
 TEST(ExecutorTest, should_turn_left_when_execute_L_command) {
     // given
     std::unique_ptr<Executor> executor(Executor::NewExecutor());
@@ -42,14 +37,11 @@ TEST(ExecutorTest, should_turn_left_when_execute_L_command) {
     executor->executeCommands("L");
 
     // then
-    int32_t x, y;
-    char heading;
-    executor->getPosition(x, y, heading);
-    ASSERT_EQ(x, 0);
-    ASSERT_EQ(y, 0);
-    ASSERT_EQ(heading, 'W');
+    Pose target = {0, 0, 'W'}; 
+    ASSERT_EQ(target, executor->Query());
 }
 
+// 测试执行'R'指令
 TEST(ExecutorTest, should_turn_right_when_execute_R_command) {
     // given
     std::unique_ptr<Executor> executor(Executor::NewExecutor());
@@ -59,14 +51,11 @@ TEST(ExecutorTest, should_turn_right_when_execute_R_command) {
     executor->executeCommands("R");
 
     // then
-    int32_t x, y;
-    char heading;
-    executor->getPosition(x, y, heading);
-    ASSERT_EQ(x, 0);
-    ASSERT_EQ(y, 0);
-    ASSERT_EQ(heading, 'E');
+    Pose target = {0, 0, 'E'}; 
+    ASSERT_EQ(target, executor->Query());
 }
 
+// 测试多条指令的执行
 TEST(ExecutorTest, should_execute_multiple_commands_correctly) {
     // given
     std::unique_ptr<Executor> executor(Executor::NewExecutor());
@@ -76,27 +65,21 @@ TEST(ExecutorTest, should_execute_multiple_commands_correctly) {
     executor->executeCommands("MRMLMRM");
 
     // then
-    int32_t x, y;
-    char heading;
-    executor->getPosition(x, y, heading);
-    ASSERT_EQ(x, 2);
-    ASSERT_EQ(y, -2);
-    ASSERT_EQ(heading, 'S');
+    Pose target = {2, -2, 'S'}; 
+    ASSERT_EQ(target, executor->Query());
 }
 
+// 测试复杂指令
 TEST(ExecutorTest, should_return_updated_position_after_commands) {
     // given
     std::unique_ptr<Executor> executor(Executor::NewExecutor());
-    executor->initialize(0, 0, 'N');
+    executor->initialize(-1, 2, 'N');
     
     // when
-    executor->executeCommands("MMLMMR");
+    executor->executeCommands("MMLMMRRM");
 
     // then
-    int32_t x, y;
-    char heading;
-    executor->getPosition(x, y, heading);
-    ASSERT_EQ(x, -2);
-    ASSERT_EQ(y, 2);
-    ASSERT_EQ(heading, 'N');
+    Pose target = {-2, 4, 'E'};  
+    ASSERT_EQ(target, executor->Query());
 }
+

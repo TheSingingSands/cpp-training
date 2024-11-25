@@ -1,13 +1,22 @@
 #include <iostream>
 #include <string>
 
+struct Pose {
+    int32_t x;
+    int32_t y;
+    char heading;
+    //重载，用于比较
+    bool operator==(const Pose& other) const {
+        return x == other.x && y == other.y && heading == other.heading;
+    }
+};
+
 class Executor {
 public:
-    // 静态工厂方法，返回一个Executor实例
     static Executor* NewExecutor() {
         return new Executor();
     }
-
+    //默认
     Executor() : x_(0), y_(0), heading_('N') {}
 
     // 初始化接口
@@ -30,19 +39,8 @@ public:
     }
 
     // 查询当前状态
-    void getPosition(int32_t &x, int32_t &y, char &heading) const {
-        x = x_;
-        y = y_;
-        heading = heading_;
-    }
-
-    // 重载==运算符，用于比较Pose
-    bool operator==(const Executor &other) const {
-        return x_ == other.x_ && y_ == other.y_ && heading_ == other.heading_;
-    }
-
-    void printPosition() {
-        printf("x=%d, y=%d, heading:%c\n", x_, y_, heading_);
+    Pose Query() const {
+        return Pose{x_, y_, heading_};
     }
 
 private:
@@ -50,7 +48,7 @@ private:
     int32_t y_;
     char heading_;
 
-    // 前进一格
+    // 前进
     void moveForward() {
         switch (heading_) {
             case 'N': y_ += 1; break;
@@ -60,7 +58,7 @@ private:
         }
     }
 
-    // 左转90度
+    // 左转
     void turnLeft() {
         switch (heading_) {
             case 'N': heading_ = 'W'; break;
@@ -70,7 +68,7 @@ private:
         }
     }
 
-    // 右转90度
+    // 右转
     void turnRight() {
         switch (heading_) {
             case 'N': heading_ = 'E'; break;
