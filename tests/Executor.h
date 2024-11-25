@@ -1,11 +1,14 @@
+#pragma once
 #include <iostream>
 #include <string>
 
+// 用于表示位置的结构体
 struct Pose {
     int32_t x;
     int32_t y;
     char heading;
-    //重载，用于比较
+
+    // 重载，用于比较位置
     bool operator==(const Pose& other) const {
         return x == other.x && y == other.y && heading == other.heading;
     }
@@ -13,26 +16,31 @@ struct Pose {
 
 class Executor {
 public:
+    // 静态工厂方法，返回 Executor 实例
     static Executor* NewExecutor() {
         return new Executor();
     }
-    //默认
-    Executor() : x_(0), y_(0), heading_('N') {}
+
+    // 默认构造函数
+    Executor() : m_x(0), m_y(0), m_heading('N') {}
+
+    // 带参构造函数
+    Executor(int32_t x, int32_t y, char heading) : m_x(x), m_y(y), m_heading(heading) {}
 
     // 初始化接口
-    void initialize(int32_t x, int32_t y, char heading) {
-        x_ = x;
-        y_ = y;
-        heading_ = heading;
+    void Initialize(int32_t x, int32_t y, char heading) {
+        m_x = x;
+        m_y = y;
+        m_heading = heading;
     }
 
     // 执行指令接口（批量执行）
-    void executeCommands(const std::string &commands) {
+    void ExecuteCommands(const std::string &commands) {
         for (char command : commands) {
             switch (command) {
-                case 'M': moveForward(); break;
-                case 'L': turnLeft(); break;
-                case 'R': turnRight(); break;
+                case 'M': MoveForward(); break;
+                case 'L': TurnLeft(); break;
+                case 'R': TurnRight(); break;
                 default: break;  // 不处理非法指令
             }
         }
@@ -40,41 +48,45 @@ public:
 
     // 查询当前状态
     Pose Query() const {
-        return Pose{x_, y_, heading_};
+        return Pose{m_x, m_y, m_heading};
     }
 
 private:
-    int32_t x_;
-    int32_t y_;
-    char heading_;
+    // 成员变量
+    int32_t m_x;
+    int32_t m_y;
+    char m_heading;
 
-    // 前进
-    void moveForward() {
-        switch (heading_) {
-            case 'N': y_ += 1; break;
-            case 'S': y_ -= 1; break;
-            case 'E': x_ += 1; break;
-            case 'W': x_ -= 1; break;
+    // 前进一格
+    void MoveForward() {
+        switch (m_heading) {
+            case 'N': m_y += 1; break;
+            case 'S': m_y -= 1; break;
+            case 'E': m_x += 1; break;
+            case 'W': m_x -= 1; break;
         }
     }
 
-    // 左转
-    void turnLeft() {
-        switch (heading_) {
-            case 'N': heading_ = 'W'; break;
-            case 'W': heading_ = 'S'; break;
-            case 'S': heading_ = 'E'; break;
-            case 'E': heading_ = 'N'; break;
-        }
+    // 取模实现左转
+    void TurnLeft() {
+        static const char directions[] = {'N', 'E', 'S', 'W'};
+        m_heading = directions[(FindDirectionIndex(m_heading) + 3) % 4];  // 逆时针转90度
     }
 
-    // 右转
-    void turnRight() {
-        switch (heading_) {
-            case 'N': heading_ = 'E'; break;
-            case 'E': heading_ = 'S'; break;
-            case 'S': heading_ = 'W'; break;
-            case 'W': heading_ = 'N'; break;
+    // 取模实现右转
+    void TurnRight() {
+        static const char directions[] = {'N', 'E', 'S', 'W'};
+        m_heading = directions[(FindDirectionIndex(m_heading) + 1) % 4];  // 顺时针转90度
+    }
+
+    // 查找索引
+    int FindDirectionIndex(char dir) const {
+        static const char directions[] = {'N', 'E', 'S', 'W'};
+        for (int i = 0; i < 4; ++i) {
+            if (directions[i] == dir) {
+                return i;
+            }
         }
+        return -1;  //非法输入
     }
 };

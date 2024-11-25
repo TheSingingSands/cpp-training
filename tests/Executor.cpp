@@ -13,14 +13,26 @@ TEST(ExecutorTest, should_return_default_pose_when_without_init_and_command) {
     ASSERT_EQ(target, executor->Query());
 }
 
+// 测试带参构造函数
+TEST(ExecutorTest, should_initialize_with_parametrized_constructor) {
+    // given
+    std::unique_ptr<Executor> executor(new Executor(114, -514, 'E'));
+
+    // when
+    Pose target = {114, -514, 'E'};
+    
+    // then
+    ASSERT_EQ(target, executor->Query());
+}
+
 // 测试执行'M'指令
 TEST(ExecutorTest, should_move_forward_when_execute_M_command) {
     // given
     std::unique_ptr<Executor> executor(Executor::NewExecutor());
-    executor->initialize(0, 0, 'N');
+    executor->Initialize(0, 0, 'N');
 
     // when
-    executor->executeCommands("M");
+    executor->ExecuteCommands("M");
 
     // then
     Pose target = {0, 1, 'N'};
@@ -31,10 +43,10 @@ TEST(ExecutorTest, should_move_forward_when_execute_M_command) {
 TEST(ExecutorTest, should_turn_left_when_execute_L_command) {
     // given
     std::unique_ptr<Executor> executor(Executor::NewExecutor());
-    executor->initialize(0, 0, 'N');
+    executor->Initialize(0, 0, 'N');
 
     // when
-    executor->executeCommands("L");
+    executor->ExecuteCommands("L");
 
     // then
     Pose target = {0, 0, 'W'}; 
@@ -45,10 +57,10 @@ TEST(ExecutorTest, should_turn_left_when_execute_L_command) {
 TEST(ExecutorTest, should_turn_right_when_execute_R_command) {
     // given
     std::unique_ptr<Executor> executor(Executor::NewExecutor());
-    executor->initialize(0, 0, 'N');
+    executor->Initialize(0, 0, 'N');
 
     // when
-    executor->executeCommands("R");
+    executor->ExecuteCommands("R");
 
     // then
     Pose target = {0, 0, 'E'}; 
@@ -59,10 +71,10 @@ TEST(ExecutorTest, should_turn_right_when_execute_R_command) {
 TEST(ExecutorTest, should_execute_multiple_commands_correctly) {
     // given
     std::unique_ptr<Executor> executor(Executor::NewExecutor());
-    executor->initialize(0, 0, 'E');
+    executor->Initialize(0, 0, 'E');
 
     // when
-    executor->executeCommands("MRMLMRM");
+    executor->ExecuteCommands("MRMLMRM");
 
     // then
     Pose target = {2, -2, 'S'}; 
@@ -73,13 +85,12 @@ TEST(ExecutorTest, should_execute_multiple_commands_correctly) {
 TEST(ExecutorTest, should_return_updated_position_after_commands) {
     // given
     std::unique_ptr<Executor> executor(Executor::NewExecutor());
-    executor->initialize(-1, 2, 'N');
+    executor->Initialize(-1, 2, 'N');
     
     // when
-    executor->executeCommands("MMLMMRRM");
+    executor->ExecuteCommands("MMLMMRRM");
 
     // then
     Pose target = {-2, 4, 'E'};  
     ASSERT_EQ(target, executor->Query());
 }
-
