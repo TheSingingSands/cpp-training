@@ -20,28 +20,28 @@ struct Pose {
 class ICommand {
 public:
     virtual ~ICommand() = default;
-    virtual void DoOperate(class Executor& executor) = 0;
+    virtual void DoOperate(class Executor& executor) const noexcept= 0;
 };
 
 //四种命令对于ICommand的继承
-class MoveCommand : public ICommand {
+class MoveCommand final: public ICommand {
 public:
-    void DoOperate(Executor& executor) override;
+    void DoOperate(Executor& executor) const noexcept override;
 };
 
-class TurnLeftCommand : public ICommand {
+class TurnLeftCommand final: public ICommand {
 public:
-    void DoOperate(Executor& executor) override;
+    void DoOperate(Executor& executor)const noexcept override;
 };
 
-class TurnRightCommand : public ICommand {
+class TurnRightCommand final: public ICommand {
 public:
-    void DoOperate(Executor& executor) override;
+    void DoOperate(Executor& executor)const noexcept override;
 };
 
-class FastCommand : public ICommand {
+class FastCommand final: public ICommand {
 public:
-    void DoOperate(Executor& executor) override;
+    void DoOperate(Executor& executor)const noexcept override;
 };
 
 // Executor 类
@@ -146,24 +146,24 @@ private:
 };
 
 // MoveCommand 的实现
-void MoveCommand::DoOperate(Executor& executor) {
+void MoveCommand::DoOperate(Executor& executor) const noexcept{
     if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
     executor.Move(1);   //再前进一格
 }
 
 // TurnLeftCommand 的实现
-void TurnLeftCommand::DoOperate(Executor& executor) {
+void TurnLeftCommand::DoOperate(Executor& executor)const noexcept {
     if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
     executor.TurnLeft();  // 然后左转
 }
 
 // TurnRightCommand 的实现
-void TurnRightCommand::DoOperate(Executor& executor) {
+void TurnRightCommand::DoOperate(Executor& executor)const noexcept {
     if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
     executor.TurnRight();  // 然后右转
 }
 
 // FastCommand 的实现
-void FastCommand::DoOperate(Executor& executor) {
+void FastCommand::DoOperate(Executor& executor)const noexcept {
     executor.Fast_Mode_Switch();  // 切换加速状态
 }
