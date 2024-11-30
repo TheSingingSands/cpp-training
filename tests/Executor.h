@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <memory>
+#include <vector>
 
 // 用于表示位置的结构体
 struct Pose {
@@ -14,6 +16,35 @@ struct Pose {
     }
 };
 
+// ICommand抽象类
+class ICommand {
+public:
+    virtual ~ICommand() = default;
+    virtual void DoOperate(class Executor& executor) = 0;
+};
+
+//四种命令对于ICommand的继承
+class MoveCommand : public ICommand {
+public:
+    void DoOperate(Executor& executor) override;
+};
+
+class TurnLeftCommand : public ICommand {
+public:
+    void DoOperate(Executor& executor) override;
+};
+
+class TurnRightCommand : public ICommand {
+public:
+    void DoOperate(Executor& executor) override;
+};
+
+class FastCommand : public ICommand {
+public:
+    void DoOperate(Executor& executor) override;
+};
+
+// Executor 类
 class Executor {
 public:
     // 静态工厂方法，返回 Executor 实例
@@ -21,27 +52,40 @@ public:
         return new Executor();
     }
 
+    // 这里让测试代码中的写法相对统一
+    static Executor* NewExecutor(int32_t x, int32_t y, char heading, bool isAccelerating = false) {
+        return new Executor(x, y, heading, isAccelerating); 
+    }
+
     // 默认构造函数
-    Executor() : m_x(0), m_y(0), m_heading('N') {}
+    Executor() : m_x(0), m_y(0), m_heading('N'), m_isAccelerating(false) {}
 
     // 带参构造函数
-    Executor(int32_t x, int32_t y, char heading) : m_x(x), m_y(y), m_heading(heading) {}
+    Executor(int32_t x, int32_t y, char heading, bool isAccelerating = false) 
+        : m_x(x), m_y(y), m_heading(heading), m_isAccelerating(isAccelerating) {}
 
     // 初始化接口
     void Initialize(int32_t x, int32_t y, char heading) {
         m_x = x;
         m_y = y;
         m_heading = heading;
+        m_isAccelerating = false;   // 默认不加速
     }
 
     // 执行指令接口（批量执行）
     void ExecuteCommands(const std::string &commands) {
         for (char command : commands) {
+            ICommand* cmd = nullptr;
             switch (command) {
-                case 'M': MoveForward(); break;
-                case 'L': TurnLeft(); break;
-                case 'R': TurnRight(); break;
+                case 'M': cmd = new MoveCommand(); break;
+                case 'L': cmd = new TurnLeftCommand(); break;
+                case 'R': cmd = new TurnRightCommand(); break;
+                case 'F': Fast_Mode_Switch(); break;
                 default: break;  // 不处理非法指令
+            }
+            if (cmd) {
+                cmd->DoOperate(*this);
+                delete cmd;
             }
         }
     }
@@ -52,18 +96,23 @@ public:
     }
 
 private:
-    // 成员变量
     int32_t m_x;
     int32_t m_y;
     char m_heading;
+    bool m_isAccelerating;
 
-    // 前进一格
-    void MoveForward() {
+    // 加速状态切换
+    void Fast_Mode_Switch() {
+        m_isAccelerating = !m_isAccelerating;
+    }
+
+    // 根据加速状态前进1格或2格
+    void Move(int steps) {
         switch (m_heading) {
-            case 'N': m_y += 1; break;
-            case 'S': m_y -= 1; break;
-            case 'E': m_x += 1; break;
-            case 'W': m_x -= 1; break;
+            case 'N': m_y += steps; break;
+            case 'S': m_y -= steps; break;
+            case 'E': m_x += steps; break;
+            case 'W': m_x -= steps; break;
         }
     }
 
@@ -89,4 +138,32 @@ private:
         }
         return -1;  //非法输入
     }
+
+    friend class MoveCommand;
+    friend class TurnLeftCommand;
+    friend class TurnRightCommand;
+    friend class FastCommand;
 };
+
+// MoveCommand 的实现
+void MoveCommand::DoOperate(Executor& executor) {
+    if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
+    executor.Move(1);   //再前进一格
+}
+
+// TurnLeftCommand 的实现
+void TurnLeftCommand::DoOperate(Executor& executor) {
+    if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
+    executor.TurnLeft();  // 然后左转
+}
+
+// TurnRightCommand 的实现
+void TurnRightCommand::DoOperate(Executor& executor) {
+    if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
+    executor.TurnRight();  // 然后右转
+}
+
+// FastCommand 的实现
+void FastCommand::DoOperate(Executor& executor) {
+    executor.Fast_Mode_Switch();  // 切换加速状态
+}
