@@ -44,6 +44,10 @@ public:
     void DoOperate(Executor& executor)const noexcept override;
 };
 
+class BackCommand final: public ICommand{
+public:
+    void DoOperate(Executor& executor)const noexcept override;
+};
 // Executor 类
 class Executor {
 public:
@@ -53,16 +57,16 @@ public:
     }
 
     // 这里让测试代码中的写法相对统一
-    static Executor* NewExecutor(int32_t x, int32_t y, char heading, bool isAccelerating = false) {
-        return new Executor(x, y, heading, isAccelerating); 
+    static Executor* NewExecutor(int32_t x, int32_t y, char heading, bool isAccelerating = false, bool isBack = false) {
+        return new Executor(x, y, heading, isAccelerating, isBack); 
     }
 
     // 默认构造函数
-    Executor() : m_x(0), m_y(0), m_heading('N'), m_isAccelerating(false) {}
+    Executor() : m_x(0), m_y(0), m_heading('N'), m_isAccelerating(false),m_isBack(false) {}
 
     // 带参构造函数
-    Executor(int32_t x, int32_t y, char heading, bool isAccelerating = false) 
-        : m_x(x), m_y(y), m_heading(heading), m_isAccelerating(isAccelerating) {}
+    Executor(int32_t x, int32_t y, char heading, bool isAccelerating = false,bool isBack = false) 
+        : m_x(x), m_y(y), m_heading(heading), m_isAccelerating(isAccelerating), m_isBack(isBack) {}
 
     // 初始化接口
     void Initialize(int32_t x, int32_t y, char heading) {
@@ -70,6 +74,7 @@ public:
         m_y = y;
         m_heading = heading;
         m_isAccelerating = false;   // 默认不加速
+        m_isBack = false;   //默认不倒车
     }
 
     // 执行指令接口（批量执行）
@@ -80,7 +85,8 @@ public:
                 case 'M': cmd = new MoveCommand(); break;
                 case 'L': cmd = new TurnLeftCommand(); break;
                 case 'R': cmd = new TurnRightCommand(); break;
-                case 'F': Fast_Mode_Switch(); break;
+                case 'F': cmd = new FastCommand(); break;
+                case 'B': cmd = new BackCommand(); break;
                 default: break;  // 不处理非法指令
             }
             if (cmd) {
@@ -100,13 +106,17 @@ private:
     int32_t m_y;
     char m_heading;
     bool m_isAccelerating;
-
+    bool m_isBack;
     // 加速状态切换
     void Fast_Mode_Switch() {
         m_isAccelerating = !m_isAccelerating;
     }
 
-    // 根据加速状态前进1格或2格
+    //倒车状态切换
+    void Back_Mode_Switch() {
+        m_isBack = !m_isBack;
+    }
+
     void Move(int steps) {
         switch (m_heading) {
             case 'N': m_y += steps; break;
@@ -143,27 +153,49 @@ private:
     friend class TurnLeftCommand;
     friend class TurnRightCommand;
     friend class FastCommand;
+    friend class BackCommand;
 };
 
 // MoveCommand 的实现
 void MoveCommand::DoOperate(Executor& executor) const noexcept{
-    if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
-    executor.Move(1);   //再前进一格
+    if(executor.m_isBack == false){
+        if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
+        executor.Move(1);    //再前进一格
+    }else{
+        if(executor.m_isAccelerating){executor.Move(-1);}
+        executor.Move(-1);   //再后退一格
+    }
+    
 }
 
 // TurnLeftCommand 的实现
 void TurnLeftCommand::DoOperate(Executor& executor)const noexcept {
-    if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
-    executor.TurnLeft();  // 然后左转
+    if(executor.m_isBack == false){
+        if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
+        executor.TurnLeft();  // 然后左转
+    }else{
+        if(executor.m_isAccelerating){executor.Move(-1);}
+        executor.TurnRight();   //右转90度
+    }
 }
 
 // TurnRightCommand 的实现
 void TurnRightCommand::DoOperate(Executor& executor)const noexcept {
-    if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
-    executor.TurnRight();  // 然后右转
+    if(executor.m_isBack == false){
+        if(executor.m_isAccelerating){executor.Move(1);}  // 如果是加速状态，先前进1格
+        executor.TurnRight();  // 然后右转
+    }else{
+        if(executor.m_isAccelerating){executor.Move(-1);}
+        executor.TurnLeft();   //左转90度
+    }
+
 }
 
 // FastCommand 的实现
 void FastCommand::DoOperate(Executor& executor)const noexcept {
     executor.Fast_Mode_Switch();  // 切换加速状态
+}
+// BackCommand 的实现
+void BackCommand::DoOperate(Executor& executor)const noexcept {
+    executor.Back_Mode_Switch();    //切换倒车状态
 }
