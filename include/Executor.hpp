@@ -21,6 +21,8 @@ public:
     Executor(const Executor&) = delete;
     Executor operator=(const Executor&) = delete;
     static Executor* NewExecutor(const Point& position = {0, 0}, const char direction = 'N') noexcept;
+    static Executor* NewSportsCar(const Point& position = {0, 0}, const char direction = 'N') noexcept;
+    static Executor* NewBus(const Point& position = {0, 1}, const char direction = 'N') noexcept;
 
     // 初始化接口
     // virtual void Initialize(int32_t x, int32_t y, char heading) = 0;
