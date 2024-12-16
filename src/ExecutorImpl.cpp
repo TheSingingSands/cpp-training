@@ -23,9 +23,9 @@ char ExecutorImpl::getDirection() const noexcept
     return posehandler.getDirection();
 }
 
-Pose ExecutorImpl::getPose() const noexcept
+Pose ExecutorImpl::Query() const noexcept
 {
-    return posehandler.getPose();
+    return posehandler.Query();
 };
 
 void ExecutorImpl::ExecuteCommands(const std::string& s) noexcept

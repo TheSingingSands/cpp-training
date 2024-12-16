@@ -20,7 +20,7 @@ public:
 
     char getDirection() const noexcept override;
 
-    Pose getPose() const noexcept override;
+    Pose Query() const noexcept override;
 
     void ExecuteCommands(const std::string& command) noexcept override;
 };
